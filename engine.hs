@@ -9,9 +9,9 @@ data RobotState = RobotState {x :: Double,
                               heading :: Double, 
                               scanInfo :: Double, 
                               id :: Int,
-                              rStep :: RobotState -> Command} -- rStep is a genaric step 
+                              rStep ::  Stepper } -- rStep is a generic step 
                                                               -- which pushes the robot forward with a specific step when called
-
+data Stepper = Stepper (RobotState -> (Command, Stepper))
 data Command = Scan Double Double | Fire Double Double | Move Double Double 
     deriving Show 
 
@@ -33,18 +33,24 @@ bigStep allRobots (explosions,newRobots) robot =
 
 setDir :: Double -> Double -> RobotState -> RobotState -- Sets direction and velocity of a given robot in the new state list
 setDir h v r = r {heading = h, speed = v} -- Set velocity and heading of robot r
-					
+                    
 rScan :: Double -> Double -> [RobotState] -> RobotState -> RobotState -- Degree, Variance, All Robots, Current Robot, New Robot from Current
+rScan deg res robs r = let (rx, ry) = r {x,y}
+                            posDeg = deg + res
+                            negDeg = deg - res
+                            
+                            
 
 rDrive :: RobotState -> RobotState -- All robots are driving at each step, so we simply move the state forward in terms of location
 
 rDamage :: Double -> Double -> RobotState -> RobotState -- X coord, Y coord, robot firing, and a damaged robot
-rDamage ex ey r =  let rx, ry = r {x, y}
-				      in if rx == ex && ry == ey then r {damage = damage r - 10}
-						 else r {damage = damage r}
+rDamage ex ey r =  let (rx, ry) = r {x, y}
+                      in if rx == ex && ry == ey then r {damage = damage r - 10}
+                         else r {damage = damage r}
 
 rFire :: Double -> Double -> RobotState -> (Double, Double) -- Degree, Distance, robot, location of explosion to be added to explosions
-rFire deg dist r = let rx, ry = r {x, y}
-                       fx = dist*cos(deg)
-					   fy = dist*sin(deg)
-					   in --Check distance between explosion and robot
+rFire deg dist = let (rx, ry) = r {x, y}
+                      fx = dist*cos(deg)
+                      fy = dist*sin(deg)
+                      in if sqrt ((rx-fx)^2 + (ry-fy)^2) < 700 then (fx,fy)
+                         else (-300,-300)
