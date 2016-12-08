@@ -1,4 +1,6 @@
 module Engine where
+import Data.Vector
+import Data.Angle
 
 type GameState = [RobotState]  
 
@@ -38,7 +40,27 @@ rScan :: Double -> Double -> [RobotState] -> RobotState -> RobotState -- Degree,
 rScan deg res robs r = let (rx, ry) = r {x,y}
                             posDeg = deg + res
                             negDeg = deg - res
-                            
+                            v1x = (2000*cos(posDeg))
+                            v1y = (2000*sin(negDeg))
+                            v2x = (2000*cos(posDeg))
+                            v2y = (2000*sin(negDeg))
+                            middleX = (v1x + v2x) /2
+                            middleY = (v1y + v2y) /2
+                            in  map distance (rx,ry) $ (filter scanHelp robs) {x, y}
+                             
+distance :: (Double, Double) -> (Double,Double) -> Double                             
+distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
+    where
+      x' = x1 - x2
+      y' = y1 - y2      
+ 
+scanHelp :: Double -> Double -> RobotState -> Double -> Bool
+scanHelp vx vy r res = let (ox, oy) = r {x,y}
+                        numerator = vdot (vx,vy) (ox,oy)
+                        denom = sqrt (ox^2+oy^2) * sqrt (vx^2 + vy^2)
+                        rad = acos (numerator/denom)
+                        theta = degrees rad
+                        in theta <= res 
                             
 
 rDrive :: RobotState -> RobotState -- All robots are driving at each step, so we simply move the state forward in terms of location
