@@ -9,7 +9,7 @@ data RobotState = RobotState {x :: Double,
                               damage :: Int, 
                               speed :: Double, 
                               heading :: Double, 
-                              scanInfo :: Double, 
+                              scanInfo :: [Double], 
                               id :: Int,
                               rStep ::  Stepper } -- rStep is a generic step 
                                                               -- which pushes the robot forward with a specific step when called
@@ -31,11 +31,8 @@ bigStep allRobots (explosions,newRobots) robot =
         Scan degree res -> (explosions, rDrive $ rScan degree res robot : newRobots ) -- Scan case, drive (you always drive), scan, and update the lists
         Fire degree dist -> (rFire degree dist robot : explosions, rDrive robot : newRobots )
         Drive dir vel -> (explosions, rDrive (setDir dir vel robot) : newRobots )
-
-
-setDir :: Double -> Double -> RobotState -> RobotState -- Sets direction and velocity of a given robot in the new state list
-setDir h v r = r {heading = h, speed = v} -- Set velocity and heading of robot r
-                    
+        
+ --Scanning                  
 rScan :: Double -> Double -> [RobotState] -> RobotState -> RobotState -- Degree, Variance, All Robots, Current Robot, New Robot from Current
 rScan deg res robs r = let (rx, ry) = r {x,y}
                             posDeg = deg + res
@@ -46,7 +43,7 @@ rScan deg res robs r = let (rx, ry) = r {x,y}
                             v2y = (2000*sin(negDeg))
                             middleX = (v1x + v2x) /2
                             middleY = (v1y + v2y) /2
-                            in  map distance (rx,ry) $ (filter scanHelp robs) {x, y}
+                            in r { scanInfo = map $ distance (rx,ry) (filter (scanHelp middleX middleY robs res) robs) {x, y} }
                              
 distance :: (Double, Double) -> (Double,Double) -> Double                             
 distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
@@ -60,10 +57,15 @@ scanHelp vx vy r res = let (ox, oy) = r {x,y}
                         denom = sqrt (ox^2+oy^2) * sqrt (vx^2 + vy^2)
                         rad = acos (numerator/denom)
                         theta = degrees rad
-                        in theta <= res 
+                        in theta <= res/2 
                             
-
+--Driving
 rDrive :: RobotState -> RobotState -- All robots are driving at each step, so we simply move the state forward in terms of location
+rDrive r = r {x = (x r) + (cos(heading r) * (speed r)), y = (y r) + (sin(heading r) * (speed r)) }
+
+setDir :: Double -> Double -> RobotState -> RobotState -- Sets direction and velocity of a given robot in the new state list
+setDir h v r = r {heading = h, speed = v} -- Set velocity and heading of robot r
+
 
 rDamage :: Double -> Double -> RobotState -> RobotState -- X coord, Y coord, robot firing, and a damaged robot
 rDamage ex ey r =  let (rx, ry) = r {x, y}
