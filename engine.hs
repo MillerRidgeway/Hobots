@@ -1,6 +1,6 @@
 module Engine where
 import Data.Vector
-import Data.Angle
+--import Data.Angle
 
 type GameState = [RobotState]  
 
@@ -35,15 +35,15 @@ bigStep allRobots (explosions,newRobots) robot =
  --Scanning                  
 rScan :: Double -> Double -> [RobotState] -> RobotState -> RobotState -- Degree, Variance, All Robots, Current Robot, New Robot from Current
 rScan deg res robs r = let (rx, ry) = r {x,y}
-                            posDeg = deg + res
-                            negDeg = deg - res
-                            v1x = (2000*cos(posDeg))
-                            v1y = (2000*sin(negDeg))
-                            v2x = (2000*cos(posDeg))
-                            v2y = (2000*sin(negDeg))
-                            middleX = (v1x + v2x) /2
-                            middleY = (v1y + v2y) /2
-                            in r { scanInfo = map $ distance (rx,ry) (filter (scanHelp middleX middleY robs res) robs) {x, y} }
+                           posDeg = deg + res
+                           negDeg = deg - res
+                           v1x = (2000*cos(posDeg))
+                           v1y = (2000*sin(negDeg))
+                           v2x = (2000*cos(posDeg))
+                           v2y = (2000*sin(negDeg))
+                           middleX = (v1x + v2x) /2
+                           middleY = (v1y + v2y) /2
+                       in r { scanInfo = map $ distance (rx,ry) (filter (scanHelp middleX middleY robs res) robs) {x, y} }
                              
 distance :: (Double, Double) -> (Double,Double) -> Double                             
 distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
@@ -53,11 +53,11 @@ distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
  
 scanHelp :: Double -> Double -> RobotState -> Double -> Bool
 scanHelp vx vy r res = let (ox, oy) = r {x,y}
-                        numerator = vdot (vx,vy) (ox,oy)
-                        denom = sqrt (ox^2+oy^2) * sqrt (vx^2 + vy^2)
-                        rad = acos (numerator/denom)
-                        theta = degrees rad
-                        in theta <= res/2 
+                           numerator = vdot (vx,vy) (ox,oy)
+                           denom = sqrt (ox^2+oy^2) * sqrt (vx^2 + vy^2)
+                           rad = acos (numerator/denom)
+                           theta = degrees rad
+                       in theta <= res/2 
                             
 --Driving
 rDrive :: RobotState -> RobotState -- All robots are driving at each step, so we simply move the state forward in terms of location
@@ -74,7 +74,7 @@ rDamage ex ey r =  let (rx, ry) = r {x, y}
 
 rFire :: Double -> Double -> RobotState -> (Double, Double) -- Degree, Distance, robot, location of explosion to be added to explosions
 rFire deg dist = let (rx, ry) = r {x, y}
-                      fx = dist*cos(deg)
-                      fy = dist*sin(deg)
-                      in if sqrt ((rx-fx)^2 + (ry-fy)^2) < 700 then (fx,fy)
+                     fx = dist*cos(deg)
+                     fy = dist*sin(deg)
+                    in if sqrt ((rx-fx)^2 + (ry-fy)^2) < 700 then (fx,fy)
                          else (-300,-300)
